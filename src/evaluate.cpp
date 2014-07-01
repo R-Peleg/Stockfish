@@ -322,6 +322,7 @@ namespace {
 
             // Bishop or knight behind a pawn
             if (    relative_rank(Us, s) < RANK_5
+                &&  relative_rank(Us, s) > RANK_1
                 && (pos.pieces(PAWN) & (s + pawn_push(Us))))
                 score += MinorBehindPawn;
         }
