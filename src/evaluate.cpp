@@ -307,7 +307,8 @@ namespace {
 
         // Decrease score if we are attacked by an enemy pawn. The remaining part
         // of threat evaluation must be done later when we have full attack info.
-        if (ei.attackedBy[Them][PAWN] & s)
+        bool attacked = ei.attackedBy[Them][PAWN] & s;
+        if (attacked)
             score -= ThreatenedByPawn[Pt];
 
         if (Pt == BISHOP || Pt == KNIGHT)
@@ -322,7 +323,8 @@ namespace {
 
             // Bishop or knight behind a pawn
             if (    relative_rank(Us, s) < RANK_5
-                && (pos.pieces(PAWN) & (s + pawn_push(Us))))
+                && (pos.pieces(PAWN) & (s + pawn_push(Us)))
+                && !attacked)
                 score += MinorBehindPawn;
         }
 
