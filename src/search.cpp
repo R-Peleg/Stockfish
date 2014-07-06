@@ -444,7 +444,7 @@ namespace {
     Depth ext, newDepth, predictedDepth;
     Value bestValue, value, ttValue, eval, nullValue, futilityValue;
     bool inCheck, givesCheck, pvMove, singularExtensionNode, improving;
-    bool captureOrPromotion, dangerous, doFullDepthSearch;
+    bool captureOrPromotion, dangerous, doFullDepthSearch, threated;
     int moveCount, quietCount;
 
     // Step 1. Initialize node
@@ -469,7 +469,7 @@ namespace {
     bestValue = -VALUE_INFINITE;
     ss->currentMove = ss->ttMove = (ss+1)->excludedMove = bestMove = MOVE_NONE;
     ss->ply = (ss-1)->ply + 1;
-    (ss+1)->skipNullMove = false; (ss+1)->reduction = DEPTH_ZERO;
+    threated = (ss+1)->skipNullMove = false; (ss+1)->reduction = DEPTH_ZERO;
     (ss+2)->killers[0] = (ss+2)->killers[1] = MOVE_NONE;
 
     // Used to send selDepth info to GUI
@@ -629,7 +629,8 @@ namespace {
 
             if (v >= beta)
                 return nullValue;
-        }
+        } else if (nullValue < beta - PawnValueMg)
+           threated = true;
     }
 
     // Step 9. ProbCut (skipped when in check)
@@ -862,7 +863,7 @@ moves_loop: // When in check and at SpNode search starts from here
               ss->reduction += ONE_PLY;
 
           else if (History[pos.piece_on(to_sq(move))][to_sq(move)] < 0)
-              ss->reduction += ONE_PLY / 2;
+              ss->reduction += threated ? ONE_PLY / 2 : ONE_PLY;
 
           if (move == countermoves[0] || move == countermoves[1])
               ss->reduction = std::max(DEPTH_ZERO, ss->reduction - ONE_PLY);
