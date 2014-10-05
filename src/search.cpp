@@ -821,6 +821,13 @@ moves_loop: // When in check and at SpNode search starts from here
               ||  History[pos.piece_on(to_sq(move))][to_sq(move)] < 0)
               ss->reduction += ONE_PLY;
 
+          if (ss->ply >= 2
+             && type_of(pos.piece_on(to_sq(move))) != PAWN
+             && is_ok((ss-2)->currentMove)
+             && to_sq((ss-2)->currentMove) == from_sq(move)
+             && aligned(from_sq((ss-2)->currentMove), from_sq(move), to_sq(move)))
+               ss->reduction += ONE_PLY;
+
           if (move == countermoves[0] || move == countermoves[1])
               ss->reduction = std::max(DEPTH_ZERO, ss->reduction - ONE_PLY);
 
