@@ -821,6 +821,14 @@ moves_loop: // When in check and at SpNode search starts from here
               ||  History[pos.piece_on(to_sq(move))][to_sq(move)] < 0)
               ss->reduction += ONE_PLY;
 
+          // Good countermove - Add reduction
+          Square msq = to_sq(move);
+          Move cms[] = { Countermoves[pos.piece_on(msq)][msq].first,
+                         Countermoves[pos.piece_on(msq)][msq].second };
+          if (   is_ok(cms[0]) && pos.pseudo_legal(cms[0]) && pos.see(cms[0]) > 0
+              || is_ok(cms[1]) && pos.pseudo_legal(cms[1]) && pos.see(cms[1]) > 0)
+              ss->reduction += ONE_PLY;
+
           if (move == countermoves[0] || move == countermoves[1])
               ss->reduction = std::max(DEPTH_ZERO, ss->reduction - ONE_PLY);
 
