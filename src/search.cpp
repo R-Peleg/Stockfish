@@ -821,6 +821,12 @@ moves_loop: // When in check and at SpNode search starts from here
               ||  History[pos.piece_on(to_sq(move))][to_sq(move)] < 0)
               ss->reduction += ONE_PLY;
 
+          if (is_ok((ss-1)->currentMove)
+              && from_sq((ss-1)->currentMove) == to_sq(move)
+              && type_of(pos.piece_on(prevMoveSq)) != PAWN
+              && type_of(pos.piece_on(prevMoveSq)) < type_of(pos.piece_on(to_sq(move))))
+              ss->reduction += ONE_PLY;
+
           if (move == countermoves[0] || move == countermoves[1])
               ss->reduction = std::max(DEPTH_ZERO, ss->reduction - ONE_PLY);
 
