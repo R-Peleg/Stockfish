@@ -406,7 +406,7 @@ namespace {
     Depth ext, newDepth, predictedDepth;
     Value bestValue, value, ttValue, eval, nullValue, futilityValue;
     bool inCheck, givesCheck, pvMove, singularExtensionNode, improving;
-    bool captureOrPromotion, dangerous, doFullDepthSearch;
+    bool dangerous, doFullDepthSearch;
     int moveCount, quietCount;
 
     // Step 1. Initialize node
@@ -700,7 +700,7 @@ moves_loop: // When in check and at SpNode search starts from here
       }
 
       ext = DEPTH_ZERO;
-      captureOrPromotion = pos.capture_or_promotion(move);
+      ss->captureOrPromotion = pos.capture_or_promotion(move);
 
       givesCheck =  type_of(move) == NORMAL && !ci.dcCandidates
                   ? ci.checkSq[type_of(pos.piece_on(from_sq(move)))] & to_sq(move)
@@ -740,7 +740,7 @@ moves_loop: // When in check and at SpNode search starts from here
 
       // Step 13. Pruning at shallow depth (exclude PV nodes)
       if (   !PvNode
-          && !captureOrPromotion
+          && !ss->captureOrPromotion
           && !inCheck
           && !dangerous
        /* &&  move != ttMove Already implicit in the next condition */
@@ -800,7 +800,7 @@ moves_loop: // When in check and at SpNode search starts from here
 
       pvMove = PvNode && moveCount == 1;
       ss->currentMove = move;
-      if (!SpNode && !captureOrPromotion && quietCount < 64)
+      if (!SpNode && !ss->captureOrPromotion && quietCount < 64)
           quietsSearched[quietCount++] = move;
 
       // Step 14. Make the move
@@ -810,7 +810,7 @@ moves_loop: // When in check and at SpNode search starts from here
       // re-searched at full depth.
       if (    depth >= 3 * ONE_PLY
           && !pvMove
-          && !captureOrPromotion
+          && !ss->captureOrPromotion
           &&  move != ttMove
           &&  move != ss->killers[0]
           &&  move != ss->killers[1])
@@ -824,6 +824,7 @@ moves_loop: // When in check and at SpNode search starts from here
           if (ss->ply >= 2
              && type_of(pos.piece_on(to_sq(move))) != PAWN
              && is_ok((ss-2)->currentMove)
+             && !(ss-2)->captureOrPromotion
              && to_sq((ss-2)->currentMove) == from_sq(move)
              && aligned(from_sq((ss-2)->currentMove), from_sq(move), to_sq(move)))
                ss->reduction += ONE_PLY;

@@ -40,6 +40,7 @@ struct Stack {
   SplitPoint* splitPoint;
   int ply;
   Move currentMove;
+  bool captureOrPromotion;
   Move ttMove;
   Move excludedMove;
   Move killers[2];
