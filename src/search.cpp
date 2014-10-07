@@ -821,7 +821,7 @@ moves_loop: // When in check and at SpNode search starts from here
               ||  History[pos.piece_on(to_sq(move))][to_sq(move)] < 0)
               ss->reduction += ONE_PLY;
 
-          if (ss->ply >= 2
+          else if (ss->ply >= 2
              && type_of(pos.piece_on(to_sq(move))) != PAWN
              && is_ok((ss-2)->currentMove)
              && !(ss-2)->captureOrPromotion
