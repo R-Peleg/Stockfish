@@ -786,6 +786,16 @@ moves_loop: // When in check and at SpNode search starts from here
 
               continue;
           }
+
+          // Prune illogical moves at low depth.
+          // Illogical move is a move that enters a square that
+          // the opponent just left
+         if (predictedDepth < 5 * ONE_PLY
+            && is_ok((ss-1)->currentMove)
+            && from_sq((ss-1)->currentMove) == to_sq(move)
+            && type_of(pos.piece_on(prevMoveSq)) != PAWN
+            && type_of(pos.piece_on(prevMoveSq)) < type_of(pos.piece_on(from_sq(move))))
+            continue;
       }
 
       // Speculative prefetch as early as possible
