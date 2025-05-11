@@ -31,6 +31,7 @@
 #include "nnue/network.h"
 #include "nnue/nnue_misc.h"
 #include "position.h"
+#include "movegen.h"
 #include "types.h"
 #include "uci.h"
 #include "nnue/nnue_accumulator.h"
@@ -60,30 +61,21 @@ Value Eval::evaluate(const Eval::NNUE::Networks&    networks,
 
     assert(!pos.checkers());
 
-    bool smallNet           = use_smallnet(pos);
-    auto [psqt, positional] = smallNet ? networks.small.evaluate(pos, accumulators, &caches.small)
-                                       : networks.big.evaluate(pos, accumulators, &caches.big);
-
-    Value nnue = (125 * psqt + 131 * positional) / 128;
-
-    // Re-evaluate the position when higher eval accuracy is worth the time spent
-    if (smallNet && (std::abs(nnue) < 236))
-    {
-        std::tie(psqt, positional) = networks.big.evaluate(pos, accumulators, &caches.big);
-        nnue                       = (125 * psqt + 131 * positional) / 128;
-        smallNet                   = false;
+    // Naive eval: material + mobility
+    Value material = PawnValue * (pos.count<PAWN>(WHITE) - pos.count<PAWN>(BLACK))
+              + 3 * PawnValue * (pos.count<KNIGHT>(WHITE) - pos.count<KNIGHT>(BLACK))
+                + 3 * PawnValue * (pos.count<BISHOP>(WHITE) - pos.count<BISHOP>(BLACK))
+                + 5 * PawnValue * (pos.count<ROOK>(WHITE) - pos.count<ROOK>(BLACK))
+                + 9 * PawnValue * (pos.count<QUEEN>(WHITE) - pos.count<QUEEN>(BLACK));
+    if (pos.side_to_move() == BLACK) {
+        material = -material;
     }
-
-    // Blend optimism and eval with nnue complexity
-    int nnueComplexity = std::abs(psqt - positional);
-    optimism += optimism * nnueComplexity / 468;
-    nnue -= nnue * nnueComplexity / 18000;
-
-    int material = 535 * pos.count<PAWN>() + pos.non_pawn_material();
-    int v        = (nnue * (77777 + material) + optimism * (7777 + material)) / 77777;
-
-    // Damp down the evaluation linearly when shuffling
-    v -= v * pos.rule50_count() / 212;
+    Value mobility = 0;
+    mobility += 0.1 * PawnValue * MoveList<LEGAL>(pos).size();
+    Position copy;
+    copy.set(pos.fen(), false, pos.state());
+    mobility -= 0.1 * PawnValue * MoveList<LEGAL>(copy).size();
+    Value v = material + mobility;
 
     // Guarantee evaluation does not hit the tablebase range
     v = std::clamp(v, VALUE_TB_LOSS_IN_MAX_PLY + 1, VALUE_TB_WIN_IN_MAX_PLY - 1);
